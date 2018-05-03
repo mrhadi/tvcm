@@ -18,6 +18,16 @@ const contentSchema = {
   caption: Joi.string().required().allow('').default('')
 };
 
+const contentBodySchema = {
+  contents: Joi.array().items({
+    id: Joi.date().timestamp(),
+    url: Joi.string().uri().required(),
+    delay: Joi.number().integer().positive().required(),
+    order: Joi.number().integer().positive().required(),
+    caption: Joi.string().required().allow('').default('')
+  })
+};
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -78,6 +88,25 @@ app.post('/api/contents', (req, res) => {
       }
       res.json(json);
     });
+  });
+});
+
+app.post('/api/contents/all', (req, res) => {
+  const joiRes = Joi.validate(req.body, contentBodySchema);
+
+  if (joiRes.error) {
+    res.status(400).send(joiRes.error);
+    return;
+  }
+
+  let json = JSON.stringify(joiRes.value);
+
+  fs.writeFile('contents.json', json, (err) => {
+    if (err) {
+      res.status(400).send(err);
+      return;
+    }
+    res.json(json);
   });
 });
 
